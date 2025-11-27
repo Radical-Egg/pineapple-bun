@@ -9,6 +9,7 @@ This repo stores some helm charts
 | abf-k8s                       | Dedicated server for Abiotic Factor                                           |
 | project-zomboid-k8s           | Dedicated server for Project Zomboid                                          |
 | ark-k8s                       | Dedicated server for ARK Survival Evolved                                     |
+| vein-k8s                      | Dedicated server for the survival game Vein                                   |
 | planar-ally-k8s               | [Planar Ally]([https://github.com/Kruptein/PlanarAlly) K8s                    |
 
 ## Usage

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: vein-k8s
+description: A basic chart for deploying the game Vein dedicated server
+type: application
+version: 0.0.1
+appVersion: latest
