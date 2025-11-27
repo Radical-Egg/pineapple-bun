@@ -96,7 +96,7 @@ spec:
         - name: {{ .Release.Name }}-backups
           image: "{{ .Values.image.backups.repository }}:{{ .Values.image.backups.tag }}"
           imagePullPolicy: {{ .Values.imagePullPolicy.backups }}
-          resources: {{- toYaml .Values.resources.game | nindent 12 }}
+          resources: {{- toYaml .Values.resources.backups | nindent 12 }}
           volumeMounts:
             - name: gamefiles
               mountPath: {{ .Values.VEIN_SERVER_BACKUP_SRC_DIR }}
