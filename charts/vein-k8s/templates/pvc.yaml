@@ -1,0 +1,37 @@
+{{ if eq .Values.storage.kind "persistentVolumeClaim" }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: {{ include "vein-k8s.fullname" . }}-gamefiles
+    namespace: {{ .Release.Namespace }}
+    annotations:
+        helm.sh/resource-policy: keep
+spec:
+  {{ if .Values.storage.pvc.storageClassName }}
+  storageClassName: {{ .Values.storage.pvc.gamefiles.storageClassName }}
+  {{ end }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.pvc.gamefiles.size }}
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+    name: {{ include "vein-k8s.fullname" . }}-backupfiles
+    namespace: {{ .Release.Namespace }}
+    annotations:
+        helm.sh/resource-policy: keep
+spec:
+  {{ if .Values.storage.pvc.storageClassName }}
+  storageClassName: {{ .Values.storage.pvc.backupfiles.storageClassName }}
+  {{ end }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.storage.pvc.backupfiles.size }}
+{{ end }}

@@ -1,0 +1,67 @@
+fullnameOverride: false
+nameOverride: false
+nodeSelector: {}
+
+storage:
+  kind: hostvol
+  hostvol:
+    gamefiles: /data/vein-gamefiles
+    backups: /data/vein-backupfiles
+  pvc:
+    gamefiles:
+      size: 10Gi
+      storageClassName: false
+    backups:
+      size: 1Gi
+      storageClassName: false
+
+networking:
+  type: LoadBalancer
+  nodePort: false
+
+imagePullPolicy:
+  game: Always
+  backups: Always
+
+image:
+  game:
+    repository: ghcr.io/radical-egg/vein-dedicated-server
+    tag: latest
+  backups:
+    repository: ghcr.io/radical-egg/vein-dedicated-backup
+    tag: latest
+
+resources:
+  game:
+    requests:
+      memory: 6Gi
+    limits:
+      memory: 12Gi
+  backups:
+    requests:
+      memory: 32Mi
+    limits:
+      memory: 500Mi
+
+VEIN_SERVER_BACKUP_SRC_DIR: /data
+VEIN_SERVER_BACKUP_DIR: /backup
+VEIN_SERVER_BACKUP_RETENTION: 5
+VEIN_SERVER_BACKUP_INTERVAL_SECONDS: 3600
+
+VEIN_GAME_PORT: 7777
+VEIN_QUERY_PORT: 27015
+PUID: 1000
+PGID: 1000
+VEIN_SERVER_NAME: "Vein Dedicated Server K8s"
+VEIN_SERVER_INSTALL_DIR: /home/vein/server
+VEIN_SERVER_PASSWORD: changeme
+VEIN_SERVER_DESCRIPTION: "Vein Dedicated server in K8s"
+VEIN_SERVER_AUTO_UPDATE: true
+VEIN_SERVER_PUBLIC: true
+VEIN_SERVER_HEARTBEAT_INTERVAL: "5.0"
+VEIN_SERVER_MAX_PLAYERS: 16
+VEIN_SERVER_ADMIN_STEAM_IDS: false
+VEIN_SERVER_SUPER_ADMIN_STEAM_IDS: false
+VEIN_SERVER_WHITELISTED_PLAYERS: false
+VEIN_SERVER_VAC_ENABLED: 0
+VEIN_EXTRA_ARGS: ""

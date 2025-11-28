@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vein-k8s.fullname" . }}-deployment
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+    spec:
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- if eq .Values.storage.kind "hostvol" }}
+        - name: gamefiles
+          hostPath:
+            path: {{ .Values.storage.hostvol.gamefiles }}
+            type: DirectoryOrCreate
+        - name: backupfiles
+          hostPath:
+            path: {{ .Values.storage.hostvol.backups }}
+            type: DirectoryOrCreate
+        {{- end }}
+        {{- if eq .Values.storage.kind "persistentVolumeClaim" }}
+        - name: gamefiles
+          persistentVolumeClaim:
+            claimName: {{ include "vein-k8s.fullname" . }}-gamefiles
+        - name: backupfiles
+          persistentVolumeClaim:
+            claimName: {{ include "vein-k8s.fullname" . }}-backups
+        {{- end }}
+      containers:
+        - name: {{ .Release.Name }}-game
+          image: "{{ .Values.image.game.repository }}:{{ .Values.image.game.tag }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy.game }}
+          resources: {{- toYaml .Values.resources.game | nindent 12 }}
+          ports:
+            - name: gameport
+              containerPort: {{ .Values.VEIN_GAME_PORT | int }}
+              protocol: UDP
+
+            - name: queryport
+              containerPort: {{ .Values.VEIN_QUERY_PORT | int }}
+              protocol: UDP
+          volumeMounts:
+            - name: gamefiles
+              mountPath: {{ .Values.VEIN_SERVER_INSTALL_DIR }}
+              readOnly: false
+          env:
+            - name: PUID
+              value: {{ .Values.PUID | toString | quote }}
+            - name: PGID
+              value: {{ .Values.PGID | toString | quote }}
+            - name: VEIN_SERVER_NAME
+              value: {{ .Values.VEIN_SERVER_NAME }}
+            - name: VEIN_SERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vein-k8s.fullname" . }}-secret
+                  key: serverPassword
+            - name: VEIN_SERVER_DESCRIPTION
+              value: {{ .Values.VEIN_SERVER_DESCRIPTION }}
+            - name: VEIN_SERVER_AUTO_UPDATE 
+              value: {{ .Values.VEIN_SERVER_AUTO_UPDATE | toString | quote  }}
+            - name: VEIN_SERVER_PUBLIC
+              value: {{ .Values.VEIN_SERVER_PUBLIC | toString | quote }}
+            - name: VEIN_SERVER_HEARTBEAT_INTERVAL
+              value: {{ .Values.VEIN_SERVER_HEARTBEAT_INTERVAL | quote }}
+            - name: VEIN_SERVER_MAX_PLAYERS
+              value: {{ .Values.VEIN_SERVER_MAX_PLAYERS | toString | quote  }}
+            {{- if .Values.VEIN_SERVER_ADMIN_STEAM_IDS }}
+            - name: VEIN_SERVER_ADMIN_STEAM_IDS
+              value: {{ .Values.VEIN_SERVER_ADMIN_STEAM_IDS | toString | quote  }}
+            {{- end }}
+            {{- if .Values.VEIN_SERVER_SUPER_ADMIN_STEAM_IDS }}
+            - name: VEIN_SERVER_SUPER_ADMIN_STEAM_IDS
+              value: {{ .Values.VEIN_SERVER_SUPER_ADMIN_STEAM_IDS | toString | quote }}
+            {{- end }}
+            {{ if .Values.VEIN_SERVER_WHITELISTED_PLAYERS }}
+            - name: VEIN_SERVER_WHITELISTED_PLAYERS
+              value: {{ .Values.VEIN_SERVER_WHITELISTED_PLAYERS | toString | quote }}
+            {{- end }}
+            - name: VEIN_SERVER_VAC_ENABLED
+              value: {{ .Values.VEIN_SERVER_VAC_ENABLED | toString | quote  }}
+            - name: VEIN_EXTRA_ARGS
+              value: {{ .Values.VEIN_EXTRA_ARGS | toString | quote }}
+
+        - name: {{ .Release.Name }}-backups
+          image: "{{ .Values.image.backups.repository }}:{{ .Values.image.backups.tag }}"
+          imagePullPolicy: {{ .Values.imagePullPolicy.backups }}
+          resources: {{- toYaml .Values.resources.backups | nindent 12 }}
+          volumeMounts:
+            - name: gamefiles
+              mountPath: {{ .Values.VEIN_SERVER_BACKUP_SRC_DIR }}
+              readOnly: true
+
+            - name: backupfiles
+              mountPath: {{ .Values.VEIN_SERVER_BACKUP_DIR }}
+              readOnly: false
+          env:
+            - name: VEIN_SERVER_BACKUP_SRC_DIR
+              value: {{ .Values.VEIN_SERVER_BACKUP_SRC_DIR }}
+            - name: VEIN_SERVER_BACKUP_DIR
+              value: {{ .Values.VEIN_SERVER_BACKUP_DIR }}
+            - name: VEIN_SERVER_BACKUP_RETENTION
+              value: {{ .Values.VEIN_SERVER_BACKUP_RETENTION | toString | quote  }}
+            - name: VEIN_SERVER_BACKUP_INTERVAL_SECONDS
+              value: {{ .Values.VEIN_SERVER_BACKUP_INTERVAL_SECONDS | toString | quote  }}
