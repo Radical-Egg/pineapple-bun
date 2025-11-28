@@ -184,4 +184,15 @@ entries:
     urls:
     - https://github.com/Radical-Egg/pineapple-bun/releases/download/project-zomboid-k8s-0.1.0/project-zomboid-k8s-0.1.0.tgz
     version: 0.1.0
-generated: "2025-05-05T19:56:10.410274312Z"
+  vein-k8s:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2025-11-28T00:32:10.918592283Z"
+    description: A basic chart for deploying the game Vein dedicated server
+    digest: bdac4c1163757dadb670d12f7f9a743a0eeafeee8ee37650bec522d735a6ca0f
+    name: vein-k8s
+    type: application
+    urls:
+    - https://github.com/Radical-Egg/pineapple-bun/releases/download/vein-k8s-0.0.1/vein-k8s-0.0.1.tgz
+    version: 0.0.1
+generated: "2025-11-28T00:32:10.918639151Z"
