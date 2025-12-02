@@ -122,6 +122,17 @@ entries:
     urls:
     - https://github.com/Radical-Egg/pineapple-bun/releases/download/ark-k8s-0.1.0/ark-k8s-0.1.0.tgz
     version: 0.1.0
+  haven-k8s:
+  - apiVersion: v2
+    appVersion: 54afa38
+    created: "2025-12-02T22:10:11.841243573Z"
+    description: A basic chart for deploying Havenweb private blog to the homelab
+    digest: 40d45e93c3a68285c13bafaec6943d87a44c2e28cb96814e89ba984b86683f26
+    name: haven-k8s
+    type: application
+    urls:
+    - https://github.com/Radical-Egg/pineapple-bun/releases/download/haven-k8s-0.0.1/haven-k8s-0.0.1.tgz
+    version: 0.0.1
   planar-ally-k8s:
   - apiVersion: v2
     appVersion: v2025.1.1
@@ -195,4 +206,4 @@ entries:
     urls:
     - https://github.com/Radical-Egg/pineapple-bun/releases/download/vein-k8s-0.0.1/vein-k8s-0.0.1.tgz
     version: 0.0.1
-generated: "2025-11-28T00:32:10.918639151Z"
+generated: "2025-12-02T22:10:11.841285411Z"
