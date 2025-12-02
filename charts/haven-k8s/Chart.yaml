@@ -1,6 +1,6 @@
 apiVersion: v2
 name: haven-k8s
-description: A basic chart for deploying Havenweb Blob to the homelab
+description: A basic chart for deploying Havenweb private blog to the homelab
 type: application
 version: 0.0.1
 appVersion: 54afa38
