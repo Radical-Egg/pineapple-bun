@@ -1,0 +1,89 @@
+fullnameOverride: false
+nameOverride: false
+
+postgresql:
+  nodeSelector: {}
+  image:
+    repository: docker.io/postgres
+    tag: 13.2-alpine
+  imagePullPolicy: IfNotPresent
+
+  storage:
+    accessModes:
+      - "ReadWriteOnce"
+    storageClassName: local-path
+    size: 10Gi
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  networking:
+    type: ClusterIP
+    port: 5432
+
+  env:
+    POSGRES_USER: haven
+    POSTGRES_HOST_AUTH_METHOD: trust
+
+haven:
+  replicas: 1
+  nodeSelector: {}
+  image:
+    repository: ghcr.io/havenweb/haven
+    tag: 54afa38
+
+  imagePullPolicy: IfNotPresent
+
+  networking:
+    type: ClusterIP
+    port: 3000
+
+  storage:
+    kind: hostvol
+    hostvol:
+      havenstorage: /data/haven/storage
+    tmpfs:
+      dir: /tmp/pids
+      sizeLimit: 32Mi
+
+  env:
+    PIDFILE: /tmp/pids/server.pid
+    RAILS_ENV: production
+    HAVEN_DB_HOST: haven-postgresql
+    HAVEN_DB_NAME: haven
+    HAVEN_DB_ROLE: haven
+    HAVEN_USER_EMAIL: changeme@havenweb.org
+    HAVEN_DB_PASSWORD: supersecretrandomstring
+    HAVEN_USER_PASS: ChangeMeN0W
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  ingress:
+    enabled: false
+    className: false
+    annotations: {}
+
+    hosts: []
+    # Example:
+    #  - host: myapp.example.com
+    #    paths:
+    #      - path: /
+    #        pathType: Prefix
+
+    tls: []
+    # Example:
+    # tls:
+    #   - secretName: myapp-tls
+    #     hosts:
+    #       - myapp.example.com

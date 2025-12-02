@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "haven-k8s.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.haven.replicas | int }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+      app.kubernetes.io/name: {{ .Release.Name }}
+      app.kubernetes.io/component: web
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        app.kubernetes.io/name: {{ .Release.Name }}
+        app.kubernetes.io/component: web
+    spec:
+      {{- with .Values.haven.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- if eq .Values.haven.storage.kind "hostvol" }}
+        - name: havenstorage
+          hostPath:
+            path: {{ .Values.haven.storage.hostvol.havenstorage }}
+            type: DirectoryOrCreate
+        {{- end }}
+        {{- if eq .Values.haven.storage.kind "persistentVolumeClaim" }}
+        - name: havenstorage
+          persistentVolumeClaim:
+            claimName: {{ include "haven-k8s.fullname" . }}-havenstorage
+        {{- end }}
+        - name: tmp-pids
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ .Values.haven.storage.tmpfs.sizeLimit | quote }}
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for postgres...";
+              until nc -z {{ include "haven-k8s.fullname" . }}-db {{ .Values.postgresql.networking.port }}; do
+                echo "Postgres unavailable, sleeping";
+                sleep 2;
+              done
+              echo "Postgres is up!";
+      containers:
+        - name: {{ .Release.Name }}
+          image: "{{ .Values.haven.image.repository }}:{{ .Values.haven.image.tag }}"
+          imagePullPolicy: {{ .Values.haven.imagePullPolicy }}
+          resources: {{- toYaml .Values.haven.resources | nindent 12 }}
+          ports:
+            - name: webport
+              containerPort: {{ .Values.haven.networking.port }}
+          volumeMounts:
+            - name: havenstorage
+              mountPath: /app/storage
+            - name: tmp-pids
+              mountPath: {{ .Values.haven.storage.tmpfs.dir | quote }}
+          env:
+            - name: PIDFILE
+              value: {{ .Values.haven.env.PIDFILE | quote }}
+            - name: RAILS_ENV
+              value: {{ .Values.haven.env.RAILS_ENV | quote }}
+            - name: HAVEN_DB_HOST
+              value: "{{ include "haven-k8s.fullname" . }}-db"
+            - name: HAVEN_DB_NAME
+              value: {{ .Values.haven.env.HAVEN_DB_NAME | quote }}
+            - name: HAVEN_DB_ROLE
+              value: {{ .Values.haven.env.HAVEN_DB_ROLE | quote }}
+            - name: HAVEN_USER_EMAIL
+              value: {{ .Values.haven.env.HAVEN_USER_EMAIL | quote }}
+            - name: HAVEN_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "haven-k8s.fullname" . }}-secret
+                  key: havenDbPassword
+            - name: HAVEN_USER_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "haven-k8s.fullname" . }}-secret
+                  key: havenUserPassword

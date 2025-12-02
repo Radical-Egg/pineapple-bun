@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "haven-k8s.fullname" . }}-db
+spec:
+  type: {{ .Values.postgresql.networking.type }}
+  ports:
+    - port: {{ .Values.postgresql.networking.port }}
+      targetPort: {{ .Values.postgresql.networking.port }}
+      name: dbport
+  selector:
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/component: db
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "haven-k8s.fullname" . }}-web
+spec:
+  type: {{ .Values.haven.networking.type }}
+  ports:
+    - port: {{ .Values.haven.networking.port }}
+      targetPort: {{ .Values.haven.networking.port }}
+      name: webport
+  selector:
+    app: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Release.Name }}
+    app.kubernetes.io/component: web

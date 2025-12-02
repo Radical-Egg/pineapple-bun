@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "haven-k8s.fullname" . }}-db
+spec:
+  serviceName: {{ include "haven-k8s.fullname" . }}-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+      app.kubernetes.io/name: {{ .Release.Name }}
+      app.kubernetes.io/component: db
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        app.kubernetes.io/name: {{ .Release.Name }}
+        app.kubernetes.io/component: db
+    spec:
+      {{- with .Values.postgresql.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: fix-permissions
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              echo "Fixing data dir permissions..."
+              chown -R 70:70 /var/lib/postgresql/data
+              chmod 700 /var/lib/postgresql/data
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgresqldata
+      containers:
+        - name: haven-postgresql
+          image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+          imagePullPolicy: {{ .Values.postgresql.imagePullPolicy }}
+          securityContext:
+            runAsUser: 70
+            runAsGroup: 70
+            runAsNonRoot: true
+          args:
+            - "-c"
+            - "max_connections=1000"
+            - "-c"
+            - "synchronous_commit=off"
+            - "-c"
+            - "fsync=off"
+            - "-c"
+            - "full_page_writes=off"
+            - "-c"
+            - "checkpoint_timeout=30min"
+            - "-c"
+            - "wal_level=logical"
+          ports:
+            - name: dbport
+              containerPort: {{ .Values.postgresql.networking.port }}
+          resources:  {{- toYaml .Values.postgresql.resources | nindent 12 }}
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgresqldata
+          env:
+            - name: POSTGRES_HOST_AUTH_METHOD
+              value: {{ .Values.postgresql.env.POSTGRES_HOST_AUTH_METHOD}}
+            - name: POSTGRES_USER
+              value:  {{ .Values.postgresql.env.POSGRES_USER }}
+
+  volumeClaimTemplates:
+    - metadata:
+        name: postgresqldata
+      spec:
+        accessModes: {{ .Values.postgresql.storage.accessModes }}
+        storageClassName: {{ .Values.postgresql.storage.storageClassName }}
+        resources:
+          requests:
+            storage: {{ .Values.postgresql.storage.size }}
